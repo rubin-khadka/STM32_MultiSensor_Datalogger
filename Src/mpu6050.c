@@ -146,7 +146,7 @@ uint8_t MPU6050_ReadAll(void)
     return I2C_ERROR;
   }
 
-  // Combine high and low bytes for each measurement
+  // Combine high and low bytes for each measurement and put in struct
   mpu6050_raw.accel_x = (int16_t) ((buffer[0] << 8) | buffer[1]);
   mpu6050_raw.accel_y = (int16_t) ((buffer[2] << 8) | buffer[3]);
   mpu6050_raw.accel_z = (int16_t) ((buffer[4] << 8) | buffer[5]);

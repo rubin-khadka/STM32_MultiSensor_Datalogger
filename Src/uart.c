@@ -8,7 +8,7 @@
 #include "stm32f103xb.h"
 #include "uart.h"
 
-#define USART1_RX_BUF_SIZE 256
+#define USART1_RX_BUF_SIZE 64
 #define USART1_TX_BUF_SIZE 256
 
 /* Global buffer instances */

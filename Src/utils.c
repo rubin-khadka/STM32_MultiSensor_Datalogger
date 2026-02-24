@@ -89,75 +89,42 @@ void format_value(uint8_t integer, uint8_t decimal, char *buffer, char unit)
   *ptr = '\0';
 }
 
-void format_reading(uint8_t temp_int, uint8_t temp_dec, uint8_t hum_int, uint8_t hum_dec, char *buffer)
+void format_reading(float temp, char *buffer)
 {
   char *ptr = buffer;
-  char temp[8];
-  uint8_t i;
+  char temp_buffer[16];
 
   // Add "Temp: "
+  *ptr++ = 'C';
+  *ptr++ = 'O';
+  *ptr++ = 'N';
+  *ptr++ = 'F';
+  *ptr++ = 'I';
+  *ptr++ = 'G';
+  *ptr++ = ' ';
+  *ptr++ = 'D';
+  *ptr++ = 'S';
+  *ptr++ = '1';
+  *ptr++ = '8';
+  *ptr++ = 'B';
+  *ptr++ = '2';
+  *ptr++ = '0';
+  *ptr++ = ' ';
   *ptr++ = 'T';
-  *ptr++ = 'e';
-  *ptr++ = 'm';
-  *ptr++ = 'p';
+  *ptr++ = 'E';
+  *ptr++ = 'M';
+  *ptr++ = 'P';
   *ptr++ = ':';
   *ptr++ = ' ';
 
-  // Format temperature
-  format_value(temp_int, temp_dec, temp, 'C');
-  i = 0;
-  while(temp[i])
-  {
-    *ptr++ = temp[i++];
-  }
+  format_float(temp, temp_buffer, 2, 'C');
 
-  // Add ", Hum: "
-  *ptr++ = ',';
-  *ptr++ = ' ';
-  *ptr++ = 'H';
-  *ptr++ = 'u';
-  *ptr++ = 'm';
-  *ptr++ = ':';
-  *ptr++ = ' ';
-
-  // Format humidity
-  format_value(hum_int, hum_dec, temp, '%');
-  i = 0;
-  while(temp[i])
+  for(char *s = temp_buffer; *s; s++)
   {
-    *ptr++ = temp[i++];
+    *ptr++ = *s;
   }
 
   // Add newline
-  *ptr++ = '\r';
-  *ptr++ = '\n';
-  *ptr = '\0';
-}
-
-void format_temp_hum(char *buffer, uint8_t temp, uint8_t hum)
-{
-  char *ptr = buffer;
-
-  // "T:24C H:45%"
-  *ptr++ = 'T';
-  *ptr++ = ':';
-
-  // Temperature (1-2 digits)
-  if(temp >= 10)
-    *ptr++ = '0' + (temp / 10);
-  *ptr++ = '0' + (temp % 10);
-
-  *ptr++ = 'C';
-  *ptr++ = ' ';
-  *ptr++ = 'H';
-  *ptr++ = ':';
-
-  // Humidity (1-2 digits)
-  if(hum >= 10)
-    *ptr++ = '0' + (hum / 10);
-  *ptr++ = '0' + (hum % 10);
-
-  *ptr++ = '%';
   *ptr++ = '\r';
   *ptr++ = '\n';
   *ptr = '\0';
