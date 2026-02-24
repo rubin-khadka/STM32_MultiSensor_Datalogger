@@ -210,12 +210,12 @@ uint8_t MPU6050_ReadTemp(void)
 // Scale all sensor data
 void MPU6050_ScaleAll(void)
 {
-  // Scale accelerometer (assuming ±2g range: 16384 LSB/g)
+  // Scale accelerometer (±2g range: 16384 LSB/g)
   mpu6050_scaled.accel_x = mpu6050_raw.accel_x / 16384.0f;
   mpu6050_scaled.accel_y = mpu6050_raw.accel_y / 16384.0f;
   mpu6050_scaled.accel_z = mpu6050_raw.accel_z / 16384.0f;
 
-  // Scale gyroscope (assuming ±250°/s range: 131 LSB/°/s)
+  // Scale gyroscope (±250°/s range: 131 LSB/°/s)
   mpu6050_scaled.gyro_x = mpu6050_raw.gyro_x / 131.0f;
   mpu6050_scaled.gyro_y = mpu6050_raw.gyro_y / 131.0f;
   mpu6050_scaled.gyro_z = mpu6050_raw.gyro_z / 131.0f;
@@ -252,13 +252,13 @@ float MPU6050_ConvertTemp(int16_t raw_temp)
   return (raw_temp / 340.0f) + 36.53f;
 }
 
-// Convert raw accelerometer to g (assuming ±2g range)
+// Convert raw accelerometer to g (±2g range)
 float MPU6050_ConvertAccel(int16_t raw_accel)
 {
   return raw_accel / 16384.0f;
 }
 
-// Convert raw gyroscope to degrees/sec (assuming ±250°/s range)
+// Convert raw gyroscope to degrees/sec (±250°/s range)
 float MPU6050_ConvertGyro(int16_t raw_gyro)
 {
   return raw_gyro / 131.0f;

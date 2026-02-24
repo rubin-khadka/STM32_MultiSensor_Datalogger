@@ -65,7 +65,7 @@ extern volatile MPU6050_ScaledData_t mpu6050_scaled;
 // Function prototypes
 uint8_t MPU6050_Init(void);
 
-// Read functions (store raw data)
+// Read functions (read and store raw data)
 uint8_t MPU6050_ReadAll(void);
 uint8_t MPU6050_ReadAccel(void);
 uint8_t MPU6050_ReadGyro(void);

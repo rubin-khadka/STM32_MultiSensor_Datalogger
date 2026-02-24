@@ -125,9 +125,20 @@ void LCD_SetCursor(uint8_t row, uint8_t col)
   LCD_SendCmd(address);
 }
 
+void LCD_DisplayError(void)
+{
+  LCD_Clear();
+
+  LCD_SetCursor(0, 0);
+  LCD_SendString("TEMP: ERROR    ");
+
+  LCD_SetCursor(1, 0);
+  LCD_SendString("HUMD: ERROR    ");
+
+}
+
 void LCD_DisplayReading(uint8_t temp_int, uint8_t temp_dec, uint8_t hum_int, uint8_t hum_dec)
 {
-
   // LINE 1: TEMP: XX.X C
   LCD_SetCursor(0, 0);
   LCD_SendString("TEMP: ");
@@ -178,27 +189,6 @@ void LCD_DisplayReading(uint8_t temp_int, uint8_t temp_dec, uint8_t hum_int, uin
   LCD_SendData(' ');
   LCD_SendData(' ');
 
-}
-
-void LCD_DisplayError(void)
-{
-  LCD_Clear();
-
-  LCD_SetCursor(0, 0);
-  LCD_SendString("TEMP: ERROR    ");
-
-  LCD_SetCursor(1, 0);
-  LCD_SendString("HUMD: ERROR    ");
-
-}
-
-void LCD_DisplayHeader(void)
-{
-  LCD_Clear();
-  LCD_SetCursor(0, 0);
-  LCD_SendString("DHT11 Sensor");
-  LCD_SetCursor(1, 0);
-  LCD_SendString("Initializing...");
 }
 
 void LCD_DisplayAccel(int16_t ax, int16_t ay, int16_t az)
@@ -260,3 +250,158 @@ void LCD_DisplayGyro(int16_t gx, int16_t gy, int16_t gz)
   LCD_SendData(' ');
   LCD_SendData(' ');
 }
+
+// Helper function to display float on LCD with specified decimal places
+void LCD_DisplayFloat(float value, uint8_t decimal_places)
+{
+  // Handle negative values
+  if(value < 0)
+  {
+    LCD_SendData('-');
+    value = -value;
+  }
+
+  // Get integer part
+  uint16_t int_part = (uint16_t) value;
+
+  // Get fractional part
+  float fractional = value - int_part;
+  uint16_t frac_part = 0;
+
+  // Convert fractional to integer (e.g., 0.123 -> 123 for 3 decimal places)
+  for(uint8_t i = 0; i < decimal_places; i++)
+  {
+    fractional *= 10;
+  }
+  frac_part = (uint16_t) (fractional + 0.5);  // Add 0.5 for rounding
+
+  // Handle case where rounding increased the fractional part
+  if(frac_part >= 1000 && decimal_places == 3)
+  {
+    frac_part = 0;
+    int_part++;
+  }
+  else if(frac_part >= 100 && decimal_places == 2)
+  {
+    frac_part = 0;
+    int_part++;
+  }
+  else if(frac_part >= 10 && decimal_places == 1)
+  {
+    frac_part = 0;
+    int_part++;
+  }
+
+  // Display integer part with proper spacing for 3 digits
+  if(int_part >= 100)
+  {
+    LCD_SendData('0' + (int_part / 100));
+    LCD_SendData('0' + ((int_part / 10) % 10));
+    LCD_SendData('0' + (int_part % 10));
+  }
+  else if(int_part >= 10)
+  {
+    LCD_SendData(' ');
+    LCD_SendData('0' + (int_part / 10));
+    LCD_SendData('0' + (int_part % 10));
+  }
+  else
+  {
+    LCD_SendData(' ');
+    LCD_SendData(' ');
+    LCD_SendData('0' + int_part);
+  }
+
+  // Decimal point
+  LCD_SendData('.');
+
+  // Display fractional part with leading zeros
+  if(decimal_places == 3)
+  {
+    LCD_SendData('0' + (frac_part / 100));
+    LCD_SendData('0' + ((frac_part / 10) % 10));
+    LCD_SendData('0' + (frac_part % 10));
+  }
+  else if(decimal_places == 2)
+  {
+    LCD_SendData('0' + (frac_part / 10));
+    LCD_SendData('0' + (frac_part % 10));
+  }
+  else if(decimal_places == 1)
+  {
+    LCD_SendData('0' + frac_part);
+  }
+}
+
+// Display scaled accelerometer data on LCD
+void LCD_DisplayAccelScaled(float ax, float ay, float az)
+{
+  // Line 1: AX and AY with units
+  LCD_SetCursor(0, 0);
+  LCD_SendString("AX:");
+  LCD_DisplayFloat(ax, 2);  // 2 decimal places
+  LCD_SendData('g');
+  LCD_SendData(' ');
+
+  // Clear remaining spaces on line 1 if needed
+  LCD_SetCursor(0, 10);  // Position after "AX:1.23g "
+  LCD_SendString("AY:");
+  LCD_DisplayFloat(ay, 2);
+  LCD_SendData('g');
+
+  // Fill rest of line with spaces if needed
+  LCD_SetCursor(0, 19);
+  LCD_SendData(' ');
+
+  // Line 2: AZ
+  LCD_SetCursor(1, 0);
+  LCD_SendString("AZ:");
+  LCD_DisplayFloat(az, 2);
+  LCD_SendData('g');
+
+  // Clear rest of line 2
+  for(uint8_t i = 6; i < 20; i++)  // Assuming 20 char LCD
+  {
+    LCD_SetCursor(1, i);
+    LCD_SendData(' ');
+  }
+}
+
+// Display scaled gyroscope data on LCD
+void LCD_DisplayGyroScaled(float gx, float gy, float gz)
+{
+  // Line 1: GX and GY with units
+  LCD_SetCursor(0, 0);
+  LCD_SendString("GX:");
+  LCD_DisplayFloat(gx, 1);  // 1 decimal place for gyro
+  LCD_SendData('d');
+  LCD_SendData('p');
+  LCD_SendData('s');
+
+  LCD_SetCursor(0, 10);
+  LCD_SendString("GY:");
+  LCD_DisplayFloat(gy, 1);
+  LCD_SendData('d');
+  LCD_SendData('p');
+  LCD_SendData('s');
+
+  // Fill rest of line with spaces
+  LCD_SetCursor(0, 19);
+  LCD_SendData(' ');
+
+  // Line 2: GZ
+  LCD_SetCursor(1, 0);
+  LCD_SendString("GZ:");
+  LCD_DisplayFloat(gz, 1);
+  LCD_SendData('d');
+  LCD_SendData('p');
+  LCD_SendData('s');
+
+  // Clear rest of line 2
+  for(uint8_t i = 8; i < 20; i++)
+  {
+    LCD_SetCursor(1, i);
+    LCD_SendData(' ');
+  }
+}
+
