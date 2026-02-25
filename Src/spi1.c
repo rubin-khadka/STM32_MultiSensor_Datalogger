@@ -24,6 +24,7 @@ void SPI1_Init(void)
   // PB4 MISO
   GPIOB->CRL &= ~(GPIO_CRL_CNF4 | GPIO_CRL_MODE4);
   GPIOB->CRL |= GPIO_CRL_CNF4_0;  // Input float
+
   // PB3 SCK
   GPIOB->CRL &= ~(GPIO_CRL_CNF3 | GPIO_CRL_MODE3);
   GPIOB->CRL |= GPIO_CRL_MODE3_0; // 10 MHZ
@@ -40,7 +41,8 @@ void SPI1_Init(void)
   SPI1->CR1 |= SPI_CR1_SSI;
   SPI1->CR1 |= SPI_CR1_MSTR;
 
-  // 8MHz/2 = 4MHz
+  // 72MHz/8 - 9 MHZ
+  SPI1->CR1 |= SPI_CR1_BR_1 | SPI_CR1_BR_0 ;
 
   // CPOL and CPHA for 74HC595
   SPI1->CR1 &= ~SPI_CR1_CPOL; // Clock idle low (0)
@@ -51,4 +53,19 @@ void SPI1_Init(void)
 
   // Enable SPI
   SPI1->CR1 |= SPI_CR1_SPE;
+}
+
+uint8_t SPI1_Transmit(uint8_t data)
+{
+  // Wait for TX buffer empty
+  while(!(SPI1->SR & SPI_SR_TXE));
+
+  // Send data
+  SPI1->DR = data;
+
+  // Wait for RX buffer not empty
+  while(!(SPI1->SR & SPI_SR_RXNE));
+
+  // Return received data
+  return SPI1->DR;
 }
