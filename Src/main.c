@@ -38,7 +38,6 @@ int main(void)
   DWT_Init();
   DS18B20_Init();
   SPI1_Init();
-  W25Q64_Init();
 
   // Loop counters
   uint8_t ds18b20_count = 0;
@@ -46,53 +45,12 @@ int main(void)
   uint8_t lcd_count = 0;
   uint8_t uart_count = 0;
 
-  uint8_t w25q64_id = 0;
-  uint8_t w25q64_present = 0;
-
   LCD_Clear();
   LCD_SendString("STM32 PROJECT");
   LCD_SetCursor(1, 0);
   LCD_SendString("INITIALIZING...");
 
-  DWT_Delay_ms(2000);
-
-  // TEST W25Q64 FIRST - Read ID
-  LCD_Clear();
-  LCD_SendString("Testing W25Q64...");
-
-  w25q64_id = W25Q64_ReadID();
-
-  if(w25q64_id == 0xEF)  // Winbond manufacturer ID
-  {
-    w25q64_present = 1;
-    LCD_Clear();
-    LCD_SendString("W25Q64 DETECTED!");
-    LCD_SetCursor(1, 0);
-    LCD_SendString("ID: 0xEF");
-
-    // Optional: UART output too
-    USART1_SendString("W25Q64 Found! ID: 0xEF\r\n");
-  }
-  else
-  {
-    LCD_Clear();
-    LCD_SendString("W25Q64 ERROR!");
-    LCD_SetCursor(1, 0);
-    LCD_SendString("ID: ");
-
-    // Convert ID to hex for display
-    char hex[3];
-    hex[0] = "0123456789ABCDEF"[w25q64_id >> 4];
-    hex[1] = "0123456789ABCDEF"[w25q64_id & 0x0F];
-    hex[2] = 0;
-    LCD_SendString(hex);
-
-    USART1_SendString("W25Q64 Error! ID: 0x");
-    USART1_SendString(hex);
-    USART1_SendString("\r\n");
-  }
-
-  DWT_Delay_ms(3000);  // Show result for 3 seconds
+  DWT_Delay_ms(3000);
 
   // Setup TIM3 for 10ms control loop
   TIMER3_SetupPeriod(10);  // 10ms period

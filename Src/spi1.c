@@ -18,21 +18,22 @@ void SPI1_Init(void)
   // Configure pins for connection with shift registers
   // PB5 MOSI
   GPIOB->CRL &= ~(GPIO_CRL_CNF5 | GPIO_CRL_MODE5);
-  GPIOB->CRL |= GPIO_CRL_MODE5_0; // 10 MHZ
+  GPIOB->CRL |= GPIO_CRL_MODE5_0 | GPIO_CRL_MODE5_1; // 10 MHZ
   GPIOB->CRL |= GPIO_CRL_CNF5_1;  // Alternate function output push-pull
 
   // PB4 MISO
   GPIOB->CRL &= ~(GPIO_CRL_CNF4 | GPIO_CRL_MODE4);
-  GPIOB->CRL |= GPIO_CRL_CNF4_0;  // Input float
+  GPIOB->CRL |= GPIO_CRL_CNF4_1;  // Input float
+  GPIOB->BSRR = GPIO_BSRR_BS4;
 
   // PB3 SCK
   GPIOB->CRL &= ~(GPIO_CRL_CNF3 | GPIO_CRL_MODE3);
-  GPIOB->CRL |= GPIO_CRL_MODE3_0; // 10 MHZ
+  GPIOB->CRL |= GPIO_CRL_MODE3_0 | GPIO_CRL_MODE3_1; // 10 MHZ
   GPIOB->CRL |= GPIO_CRL_CNF3_1;  // Alternate function output push-pull
 
   // PB6 CS
   GPIOB->CRL &= ~(GPIO_CRL_CNF6 | GPIO_CRL_MODE6);
-  GPIOB->CRL |= GPIO_CRL_MODE6_0; // 10 MHz output push pull
+  GPIOB->CRL |= GPIO_CRL_MODE6_0 | GPIO_CRL_MODE6_1; // 50 MHz output push pull
   GPIOB->BSRR |= GPIO_BSRR_BS6; // Start high
 
   // SPI1 Configurations
@@ -42,7 +43,7 @@ void SPI1_Init(void)
   SPI1->CR1 |= SPI_CR1_MSTR;
 
   // 72MHz/8 - 9 MHZ
-  SPI1->CR1 |= SPI_CR1_BR_1 | SPI_CR1_BR_0 ;
+  SPI1->CR1 |= SPI_CR1_BR_2 | SPI_CR1_BR_1;
 
   // CPOL and CPHA for 74HC595
   SPI1->CR1 &= ~SPI_CR1_CPOL; // Clock idle low (0)

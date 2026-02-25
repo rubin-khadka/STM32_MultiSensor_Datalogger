@@ -14,38 +14,53 @@ void W25Q64_Init(void)
   W25Q64_CS_HIGH();
 }
 
-uint8_t W25Q64_ReadID(void)
+void W25Q64_Reset(void)
 {
-  uint8_t id;
-  uint8_t cmd = W25Q64_CMD_READ_ID;
+    USART1_SendString("Resetting W25Q64...\r\n");
 
-  USART1_SendString("Reading W25Q64 ID...\r\n");
+    W25Q64_CS_LOW();
+    DWT_Delay_us(10);
 
-  W25Q64_CS_LOW();
-  USART1_SendString("CS LOW\r\n");
+    SPI1_Transmit(0x66);  // Enable Reset
+    DWT_Delay_us(10);
 
-  SPI1_Transmit(cmd);
-  USART1_SendString("Sent CMD 0x9F\r\n");
+    SPI1_Transmit(0x99);  // Reset
+    DWT_Delay_us(10);
 
-  SPI1_Transmit(0xFF);  // Dummy
-  USART1_SendString("Sent dummy\r\n");
+    W25Q64_CS_HIGH();
 
-  id = SPI1_Transmit(0xFF);
-  USART1_SendString("Received ID\r\n");
+    DWT_Delay_ms(100);    // Wait for reset to complete
 
-  W25Q64_CS_HIGH();
-  USART1_SendString("CS HIGH\r\n");
+    USART1_SendString("Reset complete\r\n");
+}
 
-  // Print ID in hex
-  char hex[3];
-  hex[0] = "0123456789ABCDEF"[id >> 4];
-  hex[1] = "0123456789ABCDEF"[id & 0x0F];
-  hex[2] = 0;
-  USART1_SendString("ID: 0x");
-  USART1_SendString(hex);
-  USART1_SendString("\r\n");
+uint32_t W25Q64_ReadJEDEC_ID(void)
+{
+    uint32_t id = 0;
+    uint8_t rx[3];
 
-  return id;
+    USART1_SendString("Reading full JEDEC ID...\r\n");
+
+    W25Q64_Reset();  // Reset first
+
+    W25Q64_CS_LOW();
+
+    SPI1_Transmit(0x9F);  // JEDEC ID command
+
+    rx[0] = SPI1_Transmit(0xFF);
+    rx[1] = SPI1_Transmit(0xFF);
+    rx[2] = SPI1_Transmit(0xFF);
+
+    W25Q64_CS_HIGH();
+
+    id = (rx[0] << 16) | (rx[1] << 8) | rx[2];
+
+    // Print full ID
+    char hex[10];
+    sprintf(hex, "JEDEC ID: 0x%06X\r\n", id);
+    USART1_SendString(hex);
+
+    return id;
 }
 
 uint8_t W25Q64_ReadStatus(void)
