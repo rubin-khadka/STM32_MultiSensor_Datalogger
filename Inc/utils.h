@@ -19,7 +19,7 @@ void format_accel(char *buffer, int16_t ax, int16_t ay, int16_t az);
 void format_gyro(char *buffer, int16_t gx, int16_t gy, int16_t gz);
 
 // Float to string utility functions to display scaled values
-void format_reading(float temp, char *buffer);
+void format_reading(float temp_ds18b20, float temp_mpu6050, char *buffer);
 void ftoa(float value, char *buffer, uint8_t decimal_places);
 void format_float(float value, char *buffer, uint8_t decimal_places, char unit);
 void format_accel_scaled(char *buffer, float ax, float ay, float az, uint8_t decimal_places);

@@ -138,21 +138,23 @@ void LCD_DisplayError(void)
 }
 
 // Display temperature
-void LCD_DisplayReading(float temp)
+void LCD_DisplayReading(float temp_ds18b20, float temp_mpu6050)
 {
   // LINE 1: TEMP: XX.X C
 
   LCD_SetCursor(0, 0);
-  LCD_SendString("COnfig DS18B20");
+  LCD_SendString("TEMPds18: ");
+  LCD_DisplayFloat(temp_ds18b20, 2);
+  LCD_SendData('C');
+  LCD_SendData(' ');
   LCD_SendData(' ');
   LCD_SendData(' ');
   LCD_SendData(' ');
 
   LCD_SetCursor(1, 0);
-  LCD_SendString("TEMP: ");
+  LCD_SendString("TEMPmpu: ");
 
-  LCD_DisplayFloat(temp, 2);
-  LCD_SendData(' ');
+  LCD_DisplayFloat(temp_mpu6050, 2);
   LCD_SendData('C');
   LCD_SendData(' ');
   LCD_SendData(' ');

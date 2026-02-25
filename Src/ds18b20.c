@@ -24,6 +24,8 @@
 #define DS18B20_CMD_CONVERT_T         0x44
 #define DS18B20_CMD_READ_SCRATCHPAD   0xBE
 
+volatile DS18B20_Data_t ds18b20_data = {0, 0};
+
 void DS18B20_Init(void)
 {
   // Enable GPIOB Clock
@@ -163,32 +165,24 @@ float DS18B20_ReadTemperature(void)
   uint8_t lsb, msb;
   int16_t raw;
 
-  // Start temperature conversion
   if(!DS18B20_Reset())
-  {
-    return -999.0f;  // No sensor present
-  }
-
-  DS18B20_WriteByte(DS18B20_CMD_SKIP_ROM);
-  DS18B20_WriteByte(DS18B20_CMD_CONVERT_T);
-
-  // Wait for conversion (750ms for 12-bit)
-  TIMER2_Delay_ms(750);
-
-  // Read scratchpad
-  if(!DS18B20_Reset())
-  {
     return -999.0f;
-  }
 
   DS18B20_WriteByte(DS18B20_CMD_SKIP_ROM);
   DS18B20_WriteByte(DS18B20_CMD_READ_SCRATCHPAD);
 
-  // Read temperature LSB and MSB
   lsb = DS18B20_ReadByte();
   msb = DS18B20_ReadByte();
 
-  // Convert to celsius
   raw = (msb << 8) | lsb;
   return raw * 0.0625f;
+}
+
+void DS18B20_StartConversion(void)
+{
+  if(!DS18B20_Reset())
+    return;
+
+  DS18B20_WriteByte(DS18B20_CMD_SKIP_ROM);
+  DS18B20_WriteByte(DS18B20_CMD_CONVERT_T);
 }

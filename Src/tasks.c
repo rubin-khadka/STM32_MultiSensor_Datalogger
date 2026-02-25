@@ -13,6 +13,7 @@
 #include "mpu6050.h"
 #include "i2c1.h"
 #include "lcd.h"
+#include "ds18b20.h"
 
 static char uart_buf[32];
 
@@ -24,7 +25,7 @@ void Task_UART_Output(void)
   switch(mode)
   {
     case DISPLAY_MODE_TEMP_HUM:
-      format_reading(mpu6050_scaled.temp, uart_buf);
+      format_reading(ds18b20_data.temperature, mpu6050_scaled.temp, uart_buf);
       break;
 
     case DISPLAY_MODE_ACCEL:
@@ -40,6 +41,26 @@ void Task_UART_Output(void)
   }
 
   USART1_SendString(uart_buf);
+}
+
+// Task to read DS18b20 sensor
+void Task_DS18B20_Read(void)
+{
+  // Read the temperature
+  float temp = DS18B20_ReadTemperature();
+
+  if(temp > -100.0f)
+  {
+    ds18b20_data.temperature = temp;
+    ds18b20_data.valid = 1;
+  }
+  else
+  {
+    ds18b20_data.valid = 0;
+  }
+
+  // Immediately start next conversion
+  DS18B20_StartConversion();
 }
 
 // Task to read MPU6050 sensor
@@ -59,7 +80,7 @@ void Task_LCD_Update(void)
   switch(mode)
   {
     case DISPLAY_MODE_TEMP_HUM:
-      LCD_DisplayReading(mpu6050_scaled.temp);
+      LCD_DisplayReading(ds18b20_data.temperature, mpu6050_scaled.temp);
       break;
 
     case DISPLAY_MODE_ACCEL:

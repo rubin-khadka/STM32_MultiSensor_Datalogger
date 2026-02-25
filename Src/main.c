@@ -16,7 +16,9 @@
 #include "uart.h"
 #include "utils.h"
 #include "dwt.h"
+#include "ds18b20.h"
 
+#define DS18B20_READ_TICKS  100
 #define MPU_READ_TICKS      5
 #define LCD_UPDATE_TICKS    10
 #define UART_UPDATE_TICKS   10
@@ -33,8 +35,10 @@ int main(void)
   Button_Init();
   TIMER4_Init();
   DWT_Init();
+  DS18B20_Init();
 
   // Loop counters
+  uint8_t ds18b20_count = 0;
   uint8_t mpu_count = 0;
   uint8_t lcd_count = 0;
   uint8_t uart_count = 0;
@@ -52,6 +56,14 @@ int main(void)
   while(1)
   {
     // Run tasks at different rates
+
+    // Read DS18B20 every 1 seconds
+    if(ds18b20_count++ >= DS18B20_READ_TICKS)
+    {
+      Task_DS18B20_Read();
+      ds18b20_count = 0;
+    }
+
     // Read MPU6050 every 50ms
     if(mpu_count++ >= MPU_READ_TICKS)
     {
@@ -59,7 +71,7 @@ int main(void)
       mpu_count = 0;
     }
 
-    // Updata LCD every 100ms
+    // Update LCD every 100ms
     if(lcd_count++ >= LCD_UPDATE_TICKS)
     {
       Task_LCD_Update();

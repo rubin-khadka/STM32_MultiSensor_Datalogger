@@ -89,26 +89,25 @@ void format_value(uint8_t integer, uint8_t decimal, char *buffer, char unit)
   *ptr = '\0';
 }
 
-void format_reading(float temp, char *buffer)
+void format_reading(float temp_ds18b20, float temp_mpu6050, char *buffer)
 {
   char *ptr = buffer;
   char temp_buffer[16];
 
-  // Add "Temp: "
-  *ptr++ = 'C';
-  *ptr++ = 'O';
-  *ptr++ = 'N';
-  *ptr++ = 'F';
-  *ptr++ = 'I';
-  *ptr++ = 'G';
+  *ptr++ = 'T';
+  *ptr++ = 'E';
+  *ptr++ = 'M';
+  *ptr++ = 'P';
+  *ptr++ = ':';
   *ptr++ = ' ';
-  *ptr++ = 'D';
-  *ptr++ = 'S';
-  *ptr++ = '1';
-  *ptr++ = '8';
-  *ptr++ = 'B';
-  *ptr++ = '2';
-  *ptr++ = '0';
+
+  format_float(temp_ds18b20, temp_buffer, 2, 'C');
+
+  for(char *s = temp_buffer; *s; s++)
+  {
+    *ptr++ = *s;
+  }
+
   *ptr++ = ' ';
   *ptr++ = 'T';
   *ptr++ = 'E';
@@ -117,7 +116,7 @@ void format_reading(float temp, char *buffer)
   *ptr++ = ':';
   *ptr++ = ' ';
 
-  format_float(temp, temp_buffer, 2, 'C');
+  format_float(temp_mpu6050, temp_buffer, 2, 'C');
 
   for(char *s = temp_buffer; *s; s++)
   {
