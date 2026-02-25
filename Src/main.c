@@ -15,6 +15,7 @@
 #include "timer3.h"
 #include "uart.h"
 #include "utils.h"
+#include "dwt.h"
 
 #define MPU_READ_TICKS      5
 #define LCD_UPDATE_TICKS    10
@@ -31,6 +32,7 @@ int main(void)
   MPU6050_Init();
   Button_Init();
   TIMER4_Init();
+  DWT_Init();
 
   // Loop counters
   uint8_t mpu_count = 0;
@@ -42,7 +44,7 @@ int main(void)
   LCD_SetCursor(1, 0);
   LCD_SendString("INITIALIZING...");
 
-  TIMER2_Delay_ms(2000);
+  DWT_Delay_Ms(2000);
 
   // Setup TIM3 for 10ms control loop
   TIMER3_SetupPeriod(10);  // 10ms period
