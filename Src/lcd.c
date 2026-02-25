@@ -143,8 +143,10 @@ void LCD_DisplayReading(float temp_ds18b20, float temp_mpu6050)
   // LINE 1: TEMP: XX.X C
 
   LCD_SetCursor(0, 0);
-  LCD_SendString("TEMPds18: ");
-  LCD_DisplayFloat(temp_ds18b20, 2);
+
+  LCD_SendString("TEMPmpu: ");
+  LCD_DisplayFloat(temp_mpu6050, 2);
+
   LCD_SendData('C');
   LCD_SendData(' ');
   LCD_SendData(' ');
@@ -152,9 +154,10 @@ void LCD_DisplayReading(float temp_ds18b20, float temp_mpu6050)
   LCD_SendData(' ');
 
   LCD_SetCursor(1, 0);
-  LCD_SendString("TEMPmpu: ");
 
-  LCD_DisplayFloat(temp_mpu6050, 2);
+  LCD_SendString("TEMPds18: ");
+  LCD_DisplayFloat(temp_ds18b20, 2);
+
   LCD_SendData('C');
   LCD_SendData(' ');
   LCD_SendData(' ');

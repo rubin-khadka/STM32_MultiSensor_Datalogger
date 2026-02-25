@@ -98,10 +98,14 @@ void format_reading(float temp_ds18b20, float temp_mpu6050, char *buffer)
   *ptr++ = 'E';
   *ptr++ = 'M';
   *ptr++ = 'P';
+  *ptr++ = ' ';
+  *ptr++ = 'm';
+  *ptr++ = 'p';
+  *ptr++ = 'u';
   *ptr++ = ':';
   *ptr++ = ' ';
 
-  format_float(temp_ds18b20, temp_buffer, 2, 'C');
+  format_float(temp_mpu6050, temp_buffer, 2, 'C');
 
   for(char *s = temp_buffer; *s; s++)
   {
@@ -113,10 +117,15 @@ void format_reading(float temp_ds18b20, float temp_mpu6050, char *buffer)
   *ptr++ = 'E';
   *ptr++ = 'M';
   *ptr++ = 'P';
+  *ptr++ = ' ';
+  *ptr++ = 'd';
+  *ptr++ = 's';
+  *ptr++ = '1';
+  *ptr++ = '8';
   *ptr++ = ':';
   *ptr++ = ' ';
 
-  format_float(temp_mpu6050, temp_buffer, 2, 'C');
+  format_float(temp_ds18b20, temp_buffer, 2, 'C');
 
   for(char *s = temp_buffer; *s; s++)
   {

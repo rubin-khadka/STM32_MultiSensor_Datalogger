@@ -25,12 +25,11 @@
 
 int main(void)
 {
-
   // Initialize ALL modules
-  TIMER2_Init();    // 0.1ms resolution for long delays
-  USART1_Init();    // UART for output
+  TIMER2_Init();
+  USART1_Init();
   I2C1_Init();
-  LCD_Init();       // LCD for display
+  LCD_Init();
   MPU6050_Init();
   Button_Init();
   TIMER4_Init();
