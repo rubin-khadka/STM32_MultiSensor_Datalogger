@@ -25,7 +25,7 @@ void DWT_Init(void)
 }
 
 // Delay for microseconds using DWT
-void DWT_Delay_Us(uint32_t us)
+void DWT_Delay_us(uint32_t us)
 {
   uint32_t cycles = (SystemCoreClock / 1000000) * us;
   uint32_t start = DWT_CYCCNT_R;
@@ -34,10 +34,10 @@ void DWT_Delay_Us(uint32_t us)
 }
 
 // Delay for milliseconds using DWT
-void DWT_Delay_Ms(uint32_t ms)
+void DWT_Delay_ms(uint32_t ms)
 {
   while(ms--)
   {
-    DWT_Delay_Us(1000);
+    DWT_Delay_us(1000);
   }
 }

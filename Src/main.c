@@ -44,7 +44,7 @@ int main(void)
   LCD_SetCursor(1, 0);
   LCD_SendString("INITIALIZING...");
 
-  DWT_Delay_Ms(2000);
+  DWT_Delay_ms(2000);
 
   // Setup TIM3 for 10ms control loop
   TIMER3_SetupPeriod(10);  // 10ms period
