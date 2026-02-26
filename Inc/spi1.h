@@ -10,6 +10,8 @@
 
 // Function Prototypes
 void SPI1_Init(void);
-uint8_t SPI1_Transmit(uint8_t data);
+void SPI1_CS_Low(void);
+void SPI1_CS_High(void);
+uint8_t SPI1_Transfer(uint8_t data);
 
 #endif /* SPI1_H_ */

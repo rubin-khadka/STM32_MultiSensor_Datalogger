@@ -50,6 +50,34 @@ int main(void)
   LCD_SetCursor(1, 0);
   LCD_SendString("INITIALIZING...");
 
+  DWT_Delay_ms(2000);
+  // ===== TEST W25Q64 =====
+  LCD_Clear();
+  LCD_SendString("Reading Flash...");
+
+  uint32_t id = W25Q64_ReadID();
+
+  // Extract bytes
+  uint8_t b0 = (id >> 16) & 0xFF;
+  uint8_t b1 = (id >> 8) & 0xFF;
+  uint8_t b2 = id & 0xFF;
+
+  // Show on LCD
+  LCD_Clear();
+  LCD_SendString("ID: ");
+
+  // Convert to hex characters manually
+  char id_str[7];
+  id_str[0] = "0123456789ABCDEF"[b0 >> 4];
+  id_str[1] = "0123456789ABCDEF"[b0 & 0x0F];
+  id_str[2] = "0123456789ABCDEF"[b1 >> 4];
+  id_str[3] = "0123456789ABCDEF"[b1 & 0x0F];
+  id_str[4] = "0123456789ABCDEF"[b2 >> 4];
+  id_str[5] = "0123456789ABCDEF"[b2 & 0x0F];
+  id_str[6] = 0;
+
+  LCD_SendString(id_str);
+
   DWT_Delay_ms(3000);
 
   // Setup TIM3 for 10ms control loop

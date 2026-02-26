@@ -10,30 +10,28 @@
 void SPI1_Init(void)
 {
   // Enable clock and spi peripheral
-  RCC->APB2ENR |= RCC_APB2ENR_AFIOEN | RCC_APB2ENR_IOPBEN | RCC_APB2ENR_SPI1EN;
-
-  // Remap spi1 to PB3/4/5 and PA15
-  AFIO->MAPR |= AFIO_MAPR_SPI1_REMAP;
+  RCC->APB2ENR |= RCC_APB2ENR_AFIOEN | RCC_APB2ENR_SPI1EN | RCC_APB2ENR_IOPAEN;
 
   // Configure pins for connection with shift registers
-  // PB5 MOSI
-  GPIOB->CRL &= ~(GPIO_CRL_CNF5 | GPIO_CRL_MODE5);
-  GPIOB->CRL |= GPIO_CRL_MODE5_0 | GPIO_CRL_MODE5_1; // 10 MHZ
-  GPIOB->CRL |= GPIO_CRL_CNF5_1;  // Alternate function output push-pull
+  // PA7 (MOSI)
+  GPIOA->CRL &= ~(GPIO_CRL_CNF7 | GPIO_CRL_MODE7);
+  GPIOA->CRL |= GPIO_CRL_MODE7_0 | GPIO_CRL_MODE7_1; // 50 MHz
+  GPIOA->CRL |= GPIO_CRL_CNF7_1;  // Alternate function output push-pull
 
-  // PB4 MISO - Input floating
-  GPIOB->CRL &= ~(GPIO_CRL_CNF4 | GPIO_CRL_MODE4);
-  GPIOB->CRL |= GPIO_CRL_CNF4_0;  // Input floating
+  // PA6 (MISO)
+  GPIOA->CRL &= ~(GPIO_CRL_CNF6 | GPIO_CRL_MODE6);
+  GPIOA->CRL |= GPIO_CRL_CNF6_0;  // Input floating
 
-  // PB3 SCK
-  GPIOB->CRL &= ~(GPIO_CRL_CNF3 | GPIO_CRL_MODE3);
-  GPIOB->CRL |= GPIO_CRL_MODE3_0 | GPIO_CRL_MODE3_1; // 50 MHZ
-  GPIOB->CRL |= GPIO_CRL_CNF3_1;  // Alternate function output push-pull
+  // PA5 (SCK)
+  GPIOA->CRL &= ~(GPIO_CRL_CNF5 | GPIO_CRL_MODE5);
+  GPIOA->CRL |= GPIO_CRL_MODE5_0 | GPIO_CRL_MODE5_1; // 50 MHz
+  GPIOA->CRL |= GPIO_CRL_CNF5_1;  // Alternate function output push-pull
 
-  // PB6 CS
-  GPIOB->CRL &= ~(GPIO_CRL_CNF6 | GPIO_CRL_MODE6);
-  GPIOB->CRL |= GPIO_CRL_MODE6_0 | GPIO_CRL_MODE6_1; // 50 MHz output push pull
-  GPIOB->BSRR |= GPIO_BSRR_BS6; // Start high
+  // PA3 (CS)
+  GPIOA->CRL &= ~(GPIO_CRL_CNF3 | GPIO_CRL_MODE3);
+  GPIOA->CRL |= GPIO_CRL_MODE3_0 | GPIO_CRL_MODE3_1; // 50 MHz output
+  GPIOA->CRL |= GPIO_CRL_CNF3_0;  // Push-pull
+  GPIOA->BSRR = GPIO_BSRR_BS3;    // CS high
 
   // SPI1 Configurations
   SPI1->CR1 = 0;
@@ -42,9 +40,9 @@ void SPI1_Init(void)
   SPI1->CR1 |= SPI_CR1_MSTR;
 
   // 72MHz/8 - 9 MHZ
-  SPI1->CR1 |= SPI_CR1_BR_2 | SPI_CR1_BR_1;
+  SPI1->CR1 |= SPI_CR1_BR_1;
 
-  // CPOL and CPHA for 74HC595
+  // CPOL and CPHA for W25Q64
   SPI1->CR1 &= ~SPI_CR1_CPOL; // Clock idle low (0)
   SPI1->CR1 &= ~SPI_CR1_CPHA; // Data capture on first edge
 
@@ -55,34 +53,27 @@ void SPI1_Init(void)
   SPI1->CR1 |= SPI_CR1_SPE;
 }
 
-uint8_t SPI1_Transmit(uint8_t data)
+void SPI1_CS_Low(void)
 {
-    uint32_t timeout = 10000;
+  GPIOA->BRR = GPIO_BRR_BR3;
+}
 
-    // Wait for TX buffer empty with timeout
-    while(!(SPI1->SR & SPI_SR_TXE))
-    {
-        if(--timeout == 0) return 0xFF;
-    }
+void SPI1_CS_High(void)
+{
+  GPIOA->BSRR = GPIO_BSRR_BS3;
+}
 
-    // Send data
-    SPI1->DR = data;
+uint8_t SPI1_Transfer(uint8_t data)
+{
+  // Wait until TX buffer is empty
+  while(!(SPI1->SR & SPI_SR_TXE));
 
-    // Wait for RX buffer not empty with timeout
-    timeout = 10000;
-    while(!(SPI1->SR & SPI_SR_RXNE))
-    {
-        if(--timeout == 0) return 0xFF;
-    }
+  // Send data
+  SPI1->DR = data;
 
-    uint8_t received = SPI1->DR;
+  // Wait until RX buffer is not empty
+  while(!(SPI1->SR & SPI_SR_RXNE));
 
-    // CRITICAL: Wait for SPI to not be busy
-    timeout = 10000;
-    while(SPI1->SR & SPI_SR_BSY)
-    {
-        if(--timeout == 0) return 0xFF;
-    }
-
-    return received;
+  // Return received data
+  return SPI1->DR;
 }
