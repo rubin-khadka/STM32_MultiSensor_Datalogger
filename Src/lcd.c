@@ -27,19 +27,19 @@ static void LCD_SendNibble(uint8_t nibble, uint8_t rs)
     data |= LCD_RS;  // Set RS for data
 
   // ENABLE HIGH
-  I2C2_Start();
-  I2C2_SendAddr(LCD_ADDR, I2C_WRITE);
-  I2C2_WriteByte(data | LCD_ENABLE);  // E=1
-  I2C2_Stop();
+  I2C1_Start();
+  I2C1_SendAddr(LCD_ADDR, I2C_WRITE);
+  I2C1_WriteByte(data | LCD_ENABLE);  // E=1
+  I2C1_Stop();
 
   // Small pulse delay
   for(volatile int i = 0; i < 10; i++);
 
   // ENABLE LOW
-  I2C2_Start();
-  I2C2_SendAddr(LCD_ADDR, I2C_WRITE);
-  I2C2_WriteByte(data & ~LCD_ENABLE);  // E=0
-  I2C2_Stop();
+  I2C1_Start();
+  I2C1_SendAddr(LCD_ADDR, I2C_WRITE);
+  I2C1_WriteByte(data & ~LCD_ENABLE);  // E=0
+  I2C1_Stop();
 }
 
 // Send command (RS=0)

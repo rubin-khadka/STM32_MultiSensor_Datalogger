@@ -11,7 +11,7 @@
 #include "button.h"
 #include "utils.h"
 #include "mpu6050.h"
-#include "i2c2.h"
+#include "i2c1.h"
 #include "lcd.h"
 #include "ds18b20.h"
 
