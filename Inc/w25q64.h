@@ -36,7 +36,7 @@
 #define W25Q64_TOTAL_SIZE    8388608  // 8MB
 
 // CS Control (using PB6 from your SPI setup)
-#define W25Q64_CS_LOW()     (GPIOB->BRR = GPIO_BRR_BR6)
+#define W25Q64_CS_LOW()     (GPIOB->BSRR = GPIO_BSRR_BR6)
 #define W25Q64_CS_HIGH()    (GPIOB->BSRR = GPIO_BSRR_BS6)
 
 // Public functions

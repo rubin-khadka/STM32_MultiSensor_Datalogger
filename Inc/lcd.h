@@ -9,7 +9,7 @@
 #define LCD_H_
 
 #include "stm32f103xb.h"
-#include "i2c1.h"
+#include "i2c2.h"
 
 // LCD I2C address (8 bit address 0x4E)
 #define LCD_ADDR 0x27

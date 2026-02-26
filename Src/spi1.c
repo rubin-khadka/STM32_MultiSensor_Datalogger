@@ -21,14 +21,13 @@ void SPI1_Init(void)
   GPIOB->CRL |= GPIO_CRL_MODE5_0 | GPIO_CRL_MODE5_1; // 10 MHZ
   GPIOB->CRL |= GPIO_CRL_CNF5_1;  // Alternate function output push-pull
 
-  // PB4 MISO
+  // PB4 MISO - Input floating
   GPIOB->CRL &= ~(GPIO_CRL_CNF4 | GPIO_CRL_MODE4);
-  GPIOB->CRL |= GPIO_CRL_CNF4_1;  // Input float
-  GPIOB->BSRR = GPIO_BSRR_BS4;
+  GPIOB->CRL |= GPIO_CRL_CNF4_0;  // Input floating
 
   // PB3 SCK
   GPIOB->CRL &= ~(GPIO_CRL_CNF3 | GPIO_CRL_MODE3);
-  GPIOB->CRL |= GPIO_CRL_MODE3_0 | GPIO_CRL_MODE3_1; // 10 MHZ
+  GPIOB->CRL |= GPIO_CRL_MODE3_0 | GPIO_CRL_MODE3_1; // 50 MHZ
   GPIOB->CRL |= GPIO_CRL_CNF3_1;  // Alternate function output push-pull
 
   // PB6 CS
@@ -58,15 +57,32 @@ void SPI1_Init(void)
 
 uint8_t SPI1_Transmit(uint8_t data)
 {
-  // Wait for TX buffer empty
-  while(!(SPI1->SR & SPI_SR_TXE));
+    uint32_t timeout = 10000;
 
-  // Send data
-  SPI1->DR = data;
+    // Wait for TX buffer empty with timeout
+    while(!(SPI1->SR & SPI_SR_TXE))
+    {
+        if(--timeout == 0) return 0xFF;
+    }
 
-  // Wait for RX buffer not empty
-  while(!(SPI1->SR & SPI_SR_RXNE));
+    // Send data
+    SPI1->DR = data;
 
-  // Return received data
-  return SPI1->DR;
+    // Wait for RX buffer not empty with timeout
+    timeout = 10000;
+    while(!(SPI1->SR & SPI_SR_RXNE))
+    {
+        if(--timeout == 0) return 0xFF;
+    }
+
+    uint8_t received = SPI1->DR;
+
+    // CRITICAL: Wait for SPI to not be busy
+    timeout = 10000;
+    while(SPI1->SR & SPI_SR_BSY)
+    {
+        if(--timeout == 0) return 0xFF;
+    }
+
+    return received;
 }

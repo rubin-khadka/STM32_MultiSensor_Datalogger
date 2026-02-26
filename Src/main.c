@@ -30,7 +30,7 @@ int main(void)
   // Initialize ALL modules
   TIMER2_Init();
   USART1_Init();
-  I2C1_Init();
+  I2C2_Init();
   LCD_Init();
   MPU6050_Init();
   Button_Init();

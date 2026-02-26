@@ -8,6 +8,8 @@
 #include "w25q64.h"
 #include "spi1.h"
 #include "uart.h"
+#include "dwt.h"
+#include "stdio.h"
 
 void W25Q64_Init(void)
 {
@@ -19,17 +21,14 @@ void W25Q64_Reset(void)
     USART1_SendString("Resetting W25Q64...\r\n");
 
     W25Q64_CS_LOW();
-    DWT_Delay_us(10);
 
+    // Send both bytes WITHOUT any delay between them
     SPI1_Transmit(0x66);  // Enable Reset
-    DWT_Delay_us(10);
-
-    SPI1_Transmit(0x99);  // Reset
-    DWT_Delay_us(10);
+    SPI1_Transmit(0x99);  // Reset - send immediately after first byte
 
     W25Q64_CS_HIGH();
 
-    DWT_Delay_ms(100);    // Wait for reset to complete
+    DWT_Delay_ms(100);    // Wait for reset to complete (this delay AFTER CS high is fine)
 
     USART1_SendString("Reset complete\r\n");
 }
@@ -40,25 +39,19 @@ uint32_t W25Q64_ReadJEDEC_ID(void)
     uint8_t rx[3];
 
     USART1_SendString("Reading full JEDEC ID...\r\n");
-
-    W25Q64_Reset();  // Reset first
-
     W25Q64_CS_LOW();
 
-    SPI1_Transmit(0x9F);  // JEDEC ID command
+    SPI1_Transmit(0x9F);  // Send command
 
-    rx[0] = SPI1_Transmit(0xFF);
-    rx[1] = SPI1_Transmit(0xFF);
-    rx[2] = SPI1_Transmit(0xFF);
+    // Read 3 bytes continuously
+    for(int i = 0; i < 3; i++)
+    {
+        rx[i] = SPI1_Transmit(0xFF);
+    }
 
     W25Q64_CS_HIGH();
 
     id = (rx[0] << 16) | (rx[1] << 8) | rx[2];
-
-    // Print full ID
-    char hex[10];
-    sprintf(hex, "JEDEC ID: 0x%06X\r\n", id);
-    USART1_SendString(hex);
 
     return id;
 }

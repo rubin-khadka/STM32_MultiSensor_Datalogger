@@ -6,7 +6,7 @@
  */
 
 #include "mpu6050.h"
-#include "i2c1.h"
+#include "i2c2.h"
 #include "uart.h"
 #include "timer2.h"
 
@@ -17,28 +17,28 @@ volatile MPU6050_ScaledData_t mpu6050_scaled;
 // Read a single register from MPU6050
 static uint8_t MPU6050_ReadReg(uint8_t reg, uint8_t *data)
 {
-  I2C1_Start();
-  if(I2C1_SendAddr(MPU6050_ADDR, I2C_WRITE) != I2C_OK)
+  I2C2_Start();
+  if(I2C2_SendAddr(MPU6050_ADDR, I2C_WRITE) != I2C_OK)
   {
-    I2C1_Stop();
+    I2C2_Stop();
     return I2C_ERROR;
   }
 
-  if(I2C1_WriteByte(reg) != I2C_OK)
+  if(I2C2_WriteByte(reg) != I2C_OK)
   {
-    I2C1_Stop();
+    I2C2_Stop();
     return I2C_ERROR;
   }
 
-  I2C1_Start();  // Repeated start
-  if(I2C1_SendAddr(MPU6050_ADDR, I2C_READ) != I2C_OK)
+  I2C2_Start();  // Repeated start
+  if(I2C2_SendAddr(MPU6050_ADDR, I2C_READ) != I2C_OK)
   {
-    I2C1_Stop();
+    I2C2_Stop();
     return I2C_ERROR;
   }
 
-  *data = I2C1_ReadByte(0);  // NACK on last byte
-  I2C1_Stop();
+  *data = I2C2_ReadByte(0);  // NACK on last byte
+  I2C2_Stop();
 
   return I2C_OK;
 }
@@ -46,26 +46,26 @@ static uint8_t MPU6050_ReadReg(uint8_t reg, uint8_t *data)
 // Write a single register to MPU6050
 static uint8_t MPU6050_WriteReg(uint8_t reg, uint8_t data)
 {
-  I2C1_Start();
-  if(I2C1_SendAddr(MPU6050_ADDR, I2C_WRITE) != I2C_OK)
+  I2C2_Start();
+  if(I2C2_SendAddr(MPU6050_ADDR, I2C_WRITE) != I2C_OK)
   {
-    I2C1_Stop();
+    I2C2_Stop();
     return I2C_ERROR;
   }
 
-  if(I2C1_WriteByte(reg) != I2C_OK)
+  if(I2C2_WriteByte(reg) != I2C_OK)
   {
-    I2C1_Stop();
+    I2C2_Stop();
     return I2C_ERROR;
   }
 
-  if(I2C1_WriteByte(data) != I2C_OK)
+  if(I2C2_WriteByte(data) != I2C_OK)
   {
-    I2C1_Stop();
+    I2C2_Stop();
     return I2C_ERROR;
   }
 
-  I2C1_Stop();
+  I2C2_Stop();
   return I2C_OK;
 }
 
@@ -104,23 +104,23 @@ uint8_t MPU6050_Init(void)
 // Read multiple bytes from MPU6050 (burst read)
 static uint8_t MPU6050_ReadBurst(uint8_t start_reg, uint8_t *data, uint8_t len)
 {
-  I2C1_Start();
-  if(I2C1_SendAddr(MPU6050_ADDR, I2C_WRITE) != I2C_OK)
+  I2C2_Start();
+  if(I2C2_SendAddr(MPU6050_ADDR, I2C_WRITE) != I2C_OK)
   {
-    I2C1_Stop();
+    I2C2_Stop();
     return I2C_ERROR;
   }
 
-  if(I2C1_WriteByte(start_reg) != I2C_OK)
+  if(I2C2_WriteByte(start_reg) != I2C_OK)
   {
-    I2C1_Stop();
+    I2C2_Stop();
     return I2C_ERROR;
   }
 
-  I2C1_Start();  // Repeated start
-  if(I2C1_SendAddr(MPU6050_ADDR, I2C_READ) != I2C_OK)
+  I2C2_Start();  // Repeated start
+  if(I2C2_SendAddr(MPU6050_ADDR, I2C_READ) != I2C_OK)
   {
-    I2C1_Stop();
+    I2C2_Stop();
     return I2C_ERROR;
   }
 
@@ -128,10 +128,10 @@ static uint8_t MPU6050_ReadBurst(uint8_t start_reg, uint8_t *data, uint8_t len)
   {
     // Send ACK for all bytes except the last one
     uint8_t ack = (i < (len - 1)) ? 1 : 0;
-    data[i] = I2C1_ReadByte(ack);
+    data[i] = I2C2_ReadByte(ack);
   }
 
-  I2C1_Stop();
+  I2C2_Stop();
   return I2C_OK;
 }
 
