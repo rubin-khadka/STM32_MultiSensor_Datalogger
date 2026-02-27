@@ -26,7 +26,7 @@ typedef struct
   int16_t gyro_y;
   int16_t gyro_z;
 
-  // Sequence number (helps verify data integrity)
+  // Sequence number, add real timestamp in another project
   uint16_t sequence;
 } __attribute__((packed)) LogEntry_t;
 
