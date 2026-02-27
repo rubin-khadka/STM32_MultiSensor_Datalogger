@@ -25,30 +25,107 @@ static uint32_t entry_count = 0;
 // Forward declarations
 static void FindFirstEmptyLocation(void);
 static void ShowMessage(const char *msg);
+static void ultoa(uint32_t num, char *str);
+static void send_string(const char *str);
+static void send_int(int16_t num);
+static void send_comma(void);
+static void send_newline(void);
 
+// String conversion and UART helpers
+static void ultoa(uint32_t num, char *str)
+{
+  char temp[16];
+  int i = 0, j = 0;
+
+  // Handle 0 separately
+  if(num == 0)
+  {
+    str[0] = '0';
+    str[1] = '\0';
+    return;
+  }
+
+  // Convert digits in reverse
+  while(num > 0)
+  {
+    temp[i++] = '0' + (num % 10);
+    num /= 10;
+  }
+
+  // Reverse to correct order
+  while(i > 0)
+  {
+    str[j++] = temp[--i];
+  }
+  str[j] = '\0';
+}
+
+static void send_string(const char *str)
+{
+  while(*str)
+  {
+    // Assuming you have a USART1_SendChar function
+    USART1_SendChar(*str++);
+  }
+}
+
+static void send_int(int16_t num)
+{
+  char buf[8];
+
+  if(num < 0)
+  {
+    USART1_SendChar('-');
+    num = -num;
+  }
+
+  ultoa((uint32_t) num, buf);
+  send_string(buf);
+}
+
+static void send_comma(void)
+{
+  USART1_SendChar(',');
+}
+
+static void send_newline(void)
+{
+  USART1_SendChar('\r');
+  USART1_SendChar('\n');
+}
+
+// Logger Functions
 void Logger_Init(void)
 {
+  char buf[16];
+
   // Find where to start writing
   FindFirstEmptyLocation();
 
-  // Show status
-  char buf[16];
-  sprintf(buf, "Entries: %lu", entry_count);
-
+  // Show status on LCD
   LCD_Clear();
   LCD_SetCursor(0, 0);
   LCD_SendString("Logger Ready");
   LCD_SetCursor(1, 0);
+  LCD_SendString("Entries:");
+
+  // Convert entry_count to string
+  ultoa(entry_count, buf);
+
+  // Position cursor after "Entries:" (assume 8 chars)
+  LCD_SetCursor(1, 8);
   LCD_SendString(buf);
 
-  USART1_SendString("Logger initialized. ");
-  USART1_SendString(buf);
-  USART1_SendString("\r\n");
+  // UART output
+  send_string("Logger initialized. Entries: ");
+  send_int(entry_count);
+  send_newline();
 }
 
 void Logger_SaveEntry(void)
 {
   LogEntry_t entry;
+  char buf[16];
 
   // Check if flash is full
   if(current_addr >= LOGGER_MAX_ADDR)
@@ -78,14 +155,22 @@ void Logger_SaveEntry(void)
   current_addr += LOGGER_ENTRY_SIZE;
   entry_count++;
 
-  // Show feedback
-  char buf[16];
-  sprintf(buf, "Saved #%u", sequence);
-  ShowMessage(buf);
+  // Show feedback on LCD
+  LCD_Clear();
+  LCD_SetCursor(0, 0);
+  LCD_SendString("Saved #");
 
-  // Optional: Also send via UART for immediate verification
-  USART1_SendString("Saved entry #");
-  // Send sequence number
+  // Convert sequence to string
+  ultoa(sequence, buf);
+  LCD_SendString(buf);
+
+  LCD_SetCursor(1, 0);
+  LCD_SendString("Logger");
+
+  // Optional UART feedback
+  send_string("Saved entry #");
+  send_int(sequence);
+  send_newline();
 }
 
 void Logger_DumpAll(void)
@@ -93,52 +178,73 @@ void Logger_DumpAll(void)
   LogEntry_t entry;
   uint32_t addr = LOGGER_START_ADDR;
   uint32_t count = 0;
-  char buf[64];
+  char buf[16];
 
   ShowMessage("Dumping...");
 
   // Send CSV header
-  USART1_SendString("\r\n--- SENSOR LOG DUMP ---\r\n");
-  USART1_SendString("Seq,DS18B20,MPU,AccelX,AccelY,AccelZ,GyroX,GyroY,GyroZ\r\n");
+  send_string("\r\n--- SENSOR LOG DUMP ---\r\n");
+  send_string("Seq,DS18B20,MPU,AccelX,AccelY,AccelZ,GyroX,GyroY,GyroZ\r\n");
 
   // Read and send all entries
   while(addr < current_addr && addr < LOGGER_MAX_ADDR)
   {
     W25Q64_Read(addr, (uint8_t*) &entry, LOGGER_ENTRY_SIZE);
 
-    // Send as CSV
-    sprintf(
-        buf,
-        "%u,%d,%d,%d,%d,%d,%d,%d,%d\r\n",
-        entry.sequence,
-        entry.ds18b20_temp,
-        entry.mpu_temp,
-        entry.accel_x,
-        entry.accel_y,
-        entry.accel_z,
-        entry.gyro_x,
-        entry.gyro_y,
-        entry.gyro_z);
-    USART1_SendString(buf);
+    // Send sequence
+    send_int(entry.sequence);
+    send_comma();
+
+    // Send DS18B20 temp
+    send_int(entry.ds18b20_temp);
+    send_comma();
+
+    // Send MPU temp
+    send_int(entry.mpu_temp);
+    send_comma();
+
+    // Send accelerometer
+    send_int(entry.accel_x);
+    send_comma();
+    send_int(entry.accel_y);
+    send_comma();
+    send_int(entry.accel_z);
+    send_comma();
+
+    // Send gyroscope
+    send_int(entry.gyro_x);
+    send_comma();
+    send_int(entry.gyro_y);
+    send_comma();
+    send_int(entry.gyro_z);
+
+    send_newline();
 
     count++;
     addr += LOGGER_ENTRY_SIZE;
   }
 
-  // Send summary
-  sprintf(buf, "Total: %lu entries\r\n", count);
-  USART1_SendString("--- END ---\r\n");
-  USART1_SendString(buf);
+  send_string("--- END ---\r\n");
+  send_string("Total: ");
+  send_int(count);
+  send_string(" entries\r\n");
 
   // Show on LCD
-  sprintf(buf, "Dumped %lu", count);
+  buf[0] = 'D';
+  buf[1] = 'u';
+  buf[2] = 'm';
+  buf[3] = 'p';
+  buf[4] = 'e';
+  buf[5] = 'd';
+  buf[6] = ' ';
+  ultoa(count, &buf[7]);
   ShowMessage(buf);
 }
 
 void Logger_EraseAll(void)
 {
   ShowMessage("Erasing...");
-  USART1_SendString("Erasing entire flash...\r\n");
+  send_string("Erasing entire flash...\r\n");
 
   W25Q64_EraseChip();
 
@@ -148,7 +254,7 @@ void Logger_EraseAll(void)
   entry_count = 0;
 
   ShowMessage("Flash Erased!");
-  USART1_SendString("Flash erase complete!\r\n");
+  send_string("Flash erase complete!\r\n");
 }
 
 uint32_t Logger_GetEntryCount(void)
@@ -202,5 +308,5 @@ static void ShowMessage(const char *msg)
   LCD_SetCursor(0, 0);
   LCD_SendString("Logger");
   LCD_SetCursor(1, 0);
-  LCD_SendString(msg);
+  LCD_SendString((char*)msg);
 }
