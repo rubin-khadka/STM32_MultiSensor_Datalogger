@@ -8,6 +8,10 @@
 #include "stm32f103xb.h"
 #include "button.h"
 #include "uart.h"
+#include "timer2.h"
+
+#define DATA_DUMP_PRESS   35
+#define DATA_ERASE_PRESS  65
 
 // Current display mode
 static volatile DisplayMode_t current_mode = DISPLAY_MODE_TEMP_HUM;
@@ -20,6 +24,11 @@ static volatile uint8_t button3_pressed = 0;  // PA2 - Erase
 // For long press detection
 static volatile uint16_t button2_press_counter = 0;
 static volatile uint16_t button3_press_counter = 0;
+
+// Event flag for main loop
+volatile uint8_t g_button2_short = 0;
+volatile uint8_t g_button2_long = 0;
+volatile uint8_t g_button3_long = 0;
 
 void Button_Init(void)
 {
@@ -151,6 +160,7 @@ void TIMER4_Init(void)
 
   // Enable TIM4 interrupt in NVIC
   NVIC_EnableIRQ(TIM4_IRQn);
+  NVIC_SetPriority(TIM4_IRQn, 2);
 }
 
 // Timer4 for debouncing
@@ -158,7 +168,7 @@ void TIM4_IRQHandler(void)
 {
   if(TIM4->SR & TIM_SR_UIF)
   {
-    // Stop timer
+    TIM4->SR &= ~TIM_SR_UIF;
     TIM4->CR1 &= ~TIM_CR1_CEN;
 
     // Button 1 - Mode Switch
@@ -175,19 +185,20 @@ void TIM4_IRQHandler(void)
     // Button 2 - Save/Dump
     if(button2_pressed)
     {
-      if(!(GPIOA->IDR & GPIO_IDR_IDR1))  // If still pressed
+      if(!(GPIOA->IDR & GPIO_IDR_IDR1))  // Still pressed
       {
         button2_press_counter++;
-        if(button2_press_counter >= 60)  // 3 seconds
+
+        if(button2_press_counter >= DATA_DUMP_PRESS)  // 3 seconds reached
         {
-          // LONG PRESS - Dump all data
-          Logger_DumpAll();
+          g_button2_long = 1;      // Long press detected
           button2_pressed = 0;
+          button2_press_counter = 0;
           EXTI->IMR |= EXTI_IMR_MR1;
         }
         else
         {
-          // Still counting, restart timer to check again
+          // Still counting - restart timer
           TIM4->CNT = 0;
           TIM4->SR &= ~TIM_SR_UIF;
           TIM4->CR1 |= TIM_CR1_CEN;
@@ -195,9 +206,9 @@ void TIM4_IRQHandler(void)
       }
       else  // Released early
       {
-        // SHORT PRESS - Save one entry
-        Logger_SaveEntry();
+        g_button2_short = 1;      // Short press detected
         button2_pressed = 0;
+        button2_press_counter = 0;
         EXTI->IMR |= EXTI_IMR_MR1;
       }
     }
@@ -205,31 +216,32 @@ void TIM4_IRQHandler(void)
     // Button 3 - Erase
     if(button3_pressed)
     {
-      if(!(GPIOA->IDR & GPIO_IDR_IDR2))  // If Still pressed
+      if(!(GPIOA->IDR & GPIO_IDR_IDR2))  // Still pressed
       {
         button3_press_counter++;
-        if(button3_press_counter >= 100)  // 5 seconds
+
+        if(button3_press_counter >= DATA_ERASE_PRESS)  // 5 seconds reached
         {
-          Logger_EraseAll();
+          g_button3_long = 1;
           button3_pressed = 0;
+          button3_press_counter = 0;
           EXTI->IMR |= EXTI_IMR_MR2;
         }
         else
         {
-          // Continue counting
+          // Still counting - restart timer
           TIM4->CNT = 0;
           TIM4->SR &= ~TIM_SR_UIF;
           TIM4->CR1 |= TIM_CR1_CEN;
         }
       }
-      else  // Released early - do nothing for button 3
+      else  // Released early
       {
         button3_pressed = 0;
+        button3_press_counter = 0;
         EXTI->IMR |= EXTI_IMR_MR2;
       }
     }
-
-    TIM4->SR &= ~TIM_SR_UIF;
   }
 }
 

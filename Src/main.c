@@ -19,6 +19,7 @@
 #include "ds18b20.h"
 #include "spi1.h"
 #include "w25q64.h"
+#include "logger.h"
 
 #define DS18B20_READ_TICKS  100
 #define MPU_READ_TICKS      5
@@ -52,9 +53,10 @@ int main(void)
 
   DWT_Delay_ms(2000);
 
-  // Check if the flash storage device is working
-  W25Q64_CheckPresence();
+  W25Q64_Init();
+  DWT_Delay_ms(2000);
 
+  Logger_Init();
   DWT_Delay_ms(2000);
 
   // Setup TIM3 for 10ms control loop
@@ -62,6 +64,30 @@ int main(void)
 
   while(1)
   {
+    // Handle button
+    if(g_button2_short)
+    {
+      g_button2_short = 0;
+      // Logger_SaveEntry();
+      Feedback_Show("Logger", "DATA SAVED", 1000);  // Show for 2 seconds
+    }
+
+    // Handle button 2 long press - Dump
+    if(g_button2_long)
+    {
+      g_button2_long = 0;
+      Feedback_Show("Logger", "DATA DUMPED", 1000);
+    }
+
+    // Handle button 3 long press - Erase
+    if(g_button3_long)
+    {
+      g_button3_long = 0;
+      Feedback_Show("Logger", "DATA ERASED", 1000);
+    }
+
+    // Update feedback timer (check if time expired)
+    Task_Feedback_Update();
     // Run tasks at different rates
 
     // Read DS18B20 every 1 seconds

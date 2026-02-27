@@ -28,7 +28,7 @@ uint8_t W25Q64_ReadID(void)
   return id;
 }
 
-void W25Q64_CheckPresence(void)
+void W25Q64_Init(void)
 {
   uint8_t w25q64_id = 0;
   w25q64_id = W25Q64_ReadID();

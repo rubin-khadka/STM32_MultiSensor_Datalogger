@@ -35,8 +35,8 @@
 #define W25Q64_TOTAL_SIZE     8388608  // 8MB
 
 // Function Prototypes
+void W25Q64_Init(void);
 uint8_t W25Q64_ReadID(void);
-void W25Q64_CheckPresence(void);
 uint8_t W25Q64_ReadStatus(void);
 void W25Q64_WaitBusy(void);
 void W25Q64_WriteEnable(void);

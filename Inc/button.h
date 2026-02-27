@@ -8,6 +8,8 @@
 #ifndef BUTTON_H_
 #define BUTTON_H_
 
+#include "stdint.h"
+
 // Display modes
 typedef enum
 {
@@ -17,6 +19,12 @@ typedef enum
   DISPLAY_MODE_COUNT
 } DisplayMode_t;
 
+// Button event flag
+extern volatile uint8_t g_button2_short;
+extern volatile uint8_t g_button2_long;
+extern volatile uint8_t g_button3_long;
+
+// Function Prototypes
 void Button_Init(void);
 DisplayMode_t Button_GetMode(void);
 void Button_NextMode(void);
